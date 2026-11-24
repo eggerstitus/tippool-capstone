@@ -1,33 +1,35 @@
 # Project brief: TipPool cents handling
 
-> DRAFT written by the AI from the code audit. Lines marked **[YOU]** need the owner's own
-> words or correction before this counts as the brief.
+> Drafted by the AI from the code audit; the need, user and display decision below were then
+> supplied by the owner (2026-11-24).
 
 ## The need
 TipPool splits a shift's tip pool across employees by tier (100 / 75 / 50 / 25 %). Today
 `TipPoolViewModel.calculate()` refuses any pool that isn't a whole-dollar amount: card $100.50 +
-cash $111.90 = $212.40 shows an error and no split. **[YOU: how often this happens on a real
-shift, and what a shift lead does today when it does - round by hand? skip the cents?]**
+cash $111.90 = $212.40 shows an error and no split. **Owner: cents come up on about
+99% of shifts**, so today's whole-dollar rule makes the app hard to use almost every time.
 
 Secondary defects found in the same function: negative amounts are accepted and produce negative
 payouts; `NaN`/`Infinity` parse as valid numbers; amounts that overflow `Int` are not handled; and
 there is no test of any tip-pool behavior.
 
 ## The user
-A shift lead counting tips at close, on their own Android phone, at the end of a shift.
-**[YOU: confirm / correct - who actually does the count, and how rushed are they?]**
+The shift leads do the count, usually in the morning, on an Android phone: slightly rushed but
+not under pressure. They need it **quick and accurate**: no extra taps and no cents math in
+their head.
 
 ## The change
 The calculator accepts any amount with cents, works in integer cents internally (no floating
 point), splits the **whole dollars** across tiers exactly as it does now, and shows the leftover
 cents on their own line, **"Leave for next pool"**. Cents are display-only: nothing is stored and
-nothing carries into another pool.
+nothing carries into another pool: the physical cents go in a jar and are counted again with the
+next pool's cash. The line is hidden when there are no cents.
 
 ## Definition of done (checklist)
 - [ ] $212.40 split with 7 / 0 / 0 / 0 employees gives a result, not an error; $0.40 is shown as
       "Leave for next pool".
-- [ ] A whole-dollar pool shows "Leave for next pool: $0.00" (or hides the line - UI decision,
-      recorded in the retro).
+- [ ] A whole-dollar pool **hides** the "Leave for next pool" line (owner decision: the cents go in
+      a jar counted again in the next pool, so the line only matters when there are cents).
 - [ ] Negative, NaN, Infinity and overflowing amounts are rejected with a plain message.
 - [ ] Existing whole-dollar results are unchanged (regression tests pin today's numbers).
 - [ ] The tip-pool math is a pure function with its own test class, written test-first.

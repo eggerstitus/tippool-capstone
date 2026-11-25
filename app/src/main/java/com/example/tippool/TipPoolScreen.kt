@@ -442,6 +442,18 @@ private fun ResultSection(result: CalculationResult) {
                     }
                 }
             }
+            // Cents below the whole-dollar pool go in the jar and are counted with the next pool.
+            // Display only; hidden when there are none.
+            if (result.leftoverCents > 0) {
+                Row(
+                    modifier = Modifier.fillMaxWidth().padding(horizontal = 4.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Text("Leave for next pool", color = TextSecondary, fontSize = 14.sp)
+                    Text("$${String.format("%.2f", result.leftoverCents / 100.0)}", color = TextPrimary, fontSize = 16.sp, fontWeight = FontWeight.Bold, fontFamily = FontFamily.Monospace)
+                }
+            }
         }
     }
 
@@ -451,7 +463,7 @@ private fun ResultSection(result: CalculationResult) {
             MathRow("Card tips",     "$${String.format("%.2f", result.cardTips)}")
             MathRow("Cash tips",     "$${String.format("%.2f", result.cashTips)}")
             Box(modifier = Modifier.fillMaxWidth().height(1.dp).background(Border))
-            MathRow("Total pool",    "$${result.pool}",                                valueColor = Orange)
+            MathRow("Pool (whole $)", "$${result.pool}",                               valueColor = Orange)
             MathRow("Total shares",  String.format("%.2f", result.totalShares))
             MathRow("Value / share", "$${String.format("%.4f", result.valuePerShare)}")
             Box(modifier = Modifier.fillMaxWidth().height(1.dp).background(Border))

@@ -1,0 +1,28 @@
+name: Tip pool tests
+
+# Runs only the tip-pool unit tests. The 4 known-failing CateringLogicTest tests (see README) are
+# deliberately not run here, so a red build means the tip pool broke.
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  tip-pool:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+      - uses: gradle/actions/setup-gradle@v4
+      - name: Unit tests (tip pool only)
+        run: ./gradlew :app:testDebugUnitTest --tests "com.tippool.TipPoolMathTest"
+      - name: Upload test report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: tip-pool-test-report
+          path: app/build/reports/tests/testDebugUnitTest

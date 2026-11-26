@@ -34,3 +34,6 @@ with tests. See `docs/brief.md` for what "done" means and `docs/plans/` for the 
   repo is public (the original number and two restaurant emails were masked on import).
 - Evidence (test output, review reports, triage) goes under `docs/evidence/`; plans under `docs/plans/`.
 - Pushing: remote is HTTPS `eggerstitus/tippool-capstone`. Ask before pushing.
+- Shell hygiene (learned the hard way, docs/failures.md #1): no long multi-heredoc commands. Write files with the
+  editor tool, keep shell commands short, and verify with `git status` or the test-results XML before saying a step happened.
+- Before making anything public, scan EVERY commit (`git grep <pattern> $(git rev-list --all)`), not just the working tree.

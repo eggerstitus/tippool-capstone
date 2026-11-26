@@ -26,6 +26,7 @@ import kotlinx.coroutines.launch
 import com.tippool.AppSettings
 import com.tippool.CalculationResult
 import com.tippool.TIERS
+import com.tippool.formatCents
 import com.tippool.TierResult
 import com.tippool.TipPoolViewModel
 import com.tippool.loadSettings
@@ -378,7 +379,7 @@ private fun InputSection(
                 Box(modifier = Modifier.fillMaxWidth().height(1.dp).background(Border))
                 Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
                     Text("Total pool", color = TextDim, fontSize = 12.sp)
-                    Text("$${String.format("%.2f", total)}", color = TextPrimary, fontSize = 18.sp, fontWeight = FontWeight.Bold, fontFamily = FontFamily.Monospace)
+                    Text("$${String.format(java.util.Locale.US, "%.2f", total)}", color = TextPrimary, fontSize = 18.sp, fontWeight = FontWeight.Bold, fontFamily = FontFamily.Monospace)
                 }
             }
         }
@@ -451,7 +452,7 @@ private fun ResultSection(result: CalculationResult) {
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
                     Text("Leave for next pool", color = TextSecondary, fontSize = 14.sp)
-                    Text("$${String.format("%.2f", result.leftoverCents / 100.0)}", color = TextPrimary, fontSize = 16.sp, fontWeight = FontWeight.Bold, fontFamily = FontFamily.Monospace)
+                    Text(formatCents(result.leftoverCents.toLong()), color = TextPrimary, fontSize = 16.sp, fontWeight = FontWeight.Bold, fontFamily = FontFamily.Monospace)
                 }
             }
         }
@@ -460,12 +461,12 @@ private fun ResultSection(result: CalculationResult) {
     SectionCard {
         SectionLabel("Math breakdown")
         Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-            MathRow("Card tips",     "$${String.format("%.2f", result.cardTips)}")
-            MathRow("Cash tips",     "$${String.format("%.2f", result.cashTips)}")
+            MathRow("Card tips",     "$${String.format(java.util.Locale.US, "%.2f", result.cardTips)}")
+            MathRow("Cash tips",     "$${String.format(java.util.Locale.US, "%.2f", result.cashTips)}")
             Box(modifier = Modifier.fillMaxWidth().height(1.dp).background(Border))
             MathRow("Pool (whole $)", "$${result.pool}",                               valueColor = Orange)
-            MathRow("Total shares",  String.format("%.2f", result.totalShares))
-            MathRow("Value / share", "$${String.format("%.4f", result.valuePerShare)}")
+            MathRow("Total shares",  String.format(java.util.Locale.US, "%.2f", result.totalShares))
+            MathRow("Value / share", "$${String.format(java.util.Locale.US, "%.4f", result.valuePerShare)}")
             Box(modifier = Modifier.fillMaxWidth().height(1.dp).background(Border))
             MathRow("Paid out",      "$${result.totalPaidOut}")
             MathRow("Remainder",     "$${result.extraDollars}",                        valueColor = Green)

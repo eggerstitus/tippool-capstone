@@ -56,9 +56,10 @@ class TipPoolViewModel : ViewModel() {
     val totalEmployees get() = counts.values.sum()
 
     val liveTotal: Double get() {
-        // Same parser as calculate(), so the live total never shows an amount calculate() would reject.
-        val c = parseCents(cardTips) ?: 0L
-        val ca = parseCents(cashTips) ?: 0L
+        // Same parser as calculate(). If either box holds something calculate() would refuse, show no
+        // total (0.0 hides the line) rather than a total that quietly leaves that box out.
+        val c = parseCents(cardTips) ?: return 0.0
+        val ca = parseCents(cashTips) ?: return 0.0
         return (c + ca) / 100.0
     }
 
@@ -71,17 +72,15 @@ class TipPoolViewModel : ViewModel() {
         error = null
         result = null
 
-        val card = parseCents(cardTips)
-        val cash = parseCents(cashTips)
-        if (card == null) { error = "Card tips isn't a valid amount. Use numbers like 123.45."; return }
-        if (cash == null) { error = "Cash tips isn't a valid amount. Use numbers like 123.45."; return }
+        val cardAmount = parseAmount(cardTips)
+        val cashAmount = parseAmount(cashTips)
+        if (cardAmount is Amount.Problem) { error = amountMessage("Card tips", cardAmount.kind); return }
+        if (cashAmount is Amount.Problem) { error = amountMessage("Cash tips", cashAmount.kind); return }
+        val card = (cardAmount as Amount.Cents).value
+        val cash = (cashAmount as Amount.Cents).value
 
         when (val outcome = calculatePool(card, cash, counts)) {
-            is PoolOutcome.Rejected -> error = when (outcome.reason) {
-                Rejection.NEGATIVE_AMOUNT       -> "Tips can't be negative."
-                Rejection.LESS_THAN_ONE_DOLLAR  -> "Total tip pool is under \$1."
-                Rejection.NO_EMPLOYEES          -> "Add at least one employee."
-            }
+            is PoolOutcome.Rejected -> error = rejectionMessage(outcome.reason)
             is PoolOutcome.Split -> {
                 val tierResults = outcome.tiers.map { t ->
                     TierResult(

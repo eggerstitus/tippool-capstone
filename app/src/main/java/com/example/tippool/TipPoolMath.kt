@@ -22,20 +22,31 @@ sealed interface PoolOutcome {
 
 /** Biggest amount a person can type: $9,999,999.99 (seven dollar digits). Keeps every sum inside Int dollars. */
 private const val MAX_DOLLAR_DIGITS = 7
-private val MONEY = Regex("""(\d*)(?:\.(\d{0,2}))?""")
 
-/** Parses what a person typed into whole cents, or null if it is not a valid money amount. Blank = 0. */
-fun parseCents(text: String): Long? {
+/** Digits, then optionally a "." or "," and at most two more digits. Nothing else (no sign, no thousands marks). */
+private val MONEY = Regex("""(\d*)(?:[.,](\d{0,2}))?""")
+
+/**
+ * Parses what a person typed into whole cents, or says why not. Blank = $0. A single "," counts as the
+ * decimal point (some keyboards only offer it), but "1,000" and "1,234.50" are refused, not guessed at.
+ */
+fun parseAmount(text: String): Amount {
     val t = text.trim()
-    if (t.isEmpty()) return 0L
-    val m = MONEY.matchEntire(t) ?: return null
-    val dollars = m.groupValues[1]
-    val frac = m.groupValues[2]
-    if (dollars.isEmpty() && frac.isEmpty()) return null // just "." (or nothing usable)
-    if (dollars.length > MAX_DOLLAR_DIGITS) return null
+    if (t.isEmpty()) return Amount.Cents(0L)
+    val negative = t.startsWith("-")
+    val m = MONEY.matchEntire(if (negative) t.drop(1) else t)
+    if (m == null || (m.groupValues[1].isEmpty() && m.groupValues[2].isEmpty())) {
+        return Amount.Problem(AmountProblem.NOT_A_NUMBER)
+    }
+    if (negative) return Amount.Problem(AmountProblem.NEGATIVE)
+    val dollars = m.groupValues[1].trimStart('0')
+    if (dollars.length > MAX_DOLLAR_DIGITS) return Amount.Problem(AmountProblem.TOO_LARGE)
     val d = if (dollars.isEmpty()) 0L else dollars.toLong()
-    return d * 100 + frac.padEnd(2, '0').toLong()
+    return Amount.Cents(d * 100 + m.groupValues[2].padEnd(2, '0').toLong())
 }
+
+/** The cents, or null if the text is not a usable amount. Use [parseAmount] when the reason matters. */
+fun parseCents(text: String): Long? = (parseAmount(text) as? Amount.Cents)?.value
 
 /**
  * Splits the whole dollars of card + cash across tiers. All money arguments are in cents, and all
@@ -68,7 +79,7 @@ fun calculatePool(cardCents: Long, cashCents: Long, counts: Map<Int, Int>): Pool
     )
 }
 
-// ---- Review fixes (stubs: written test-first, see docs/review/triage-2026-11-26.md) ------------------
+// ---- Words and formatting (kept here so they can be unit-tested) ---------------------------------
 
 enum class AmountProblem { NOT_A_NUMBER, NEGATIVE, TOO_LARGE }
 
@@ -77,14 +88,19 @@ sealed interface Amount {
     data class Problem(val kind: AmountProblem) : Amount
 }
 
-/** Like [parseCents] but says WHY an amount was refused. */
-fun parseAmount(text: String): Amount = Amount.Problem(AmountProblem.NOT_A_NUMBER)
-
 /** Plain words for a refused amount typed into [field] (e.g. "Card tips"). */
-fun amountMessage(field: String, problem: AmountProblem): String = ""
+fun amountMessage(field: String, problem: AmountProblem): String = when (problem) {
+    AmountProblem.NOT_A_NUMBER -> "$field isn't a valid amount. Use numbers like 123.45."
+    AmountProblem.NEGATIVE     -> "$field can't be negative."
+    AmountProblem.TOO_LARGE    -> "$field is too large (the most is \$9,999,999.99)."
+}
 
 /** Plain words for a pool that could not be split. */
-fun rejectionMessage(reason: Rejection): String = ""
+fun rejectionMessage(reason: Rejection): String = when (reason) {
+    Rejection.NEGATIVE_AMOUNT      -> "Tips can't be negative."
+    Rejection.LESS_THAN_ONE_DOLLAR -> "Total tip pool is under \$1."
+    Rejection.NO_EMPLOYEES         -> "Add at least one employee."
+}
 
 /** Integer-only money text such as "$212.40", independent of the phone's language settings. */
-fun formatCents(cents: Long): String = ""
+fun formatCents(cents: Long): String = "$" + (cents / 100) + "." + (cents % 100).toString().padStart(2, '0')

@@ -112,4 +112,109 @@ class TipPoolMathTest {
 
     @Test fun negativeEmployeeCount_isTreatedAsNobody() =
         assertEquals(PoolOutcome.Rejected(Rejection.NO_EMPLOYEES), calculatePool(10000, 0, counts(c100 = -3)))
+
+    // ---- Review fixes: amounts with a reason ------------------------------------------------
+
+    private fun problemOf(text: String): AmountProblem? = (parseAmount(text) as? Amount.Problem)?.kind
+    private fun centsOf(text: String): Long? = (parseAmount(text) as? Amount.Cents)?.value
+
+    @Test fun amount_commaIsADecimalPointWhenOneToTwoDigitsFollow() {
+        assertEquals(10050L, centsOf("100,50"))
+        assertEquals(150L, centsOf("1,5"))
+        assertEquals(1200L, centsOf("12,"))
+    }
+    @Test fun amount_commaAsThousandsOrMixedIsNotANumber() {
+        assertEquals(AmountProblem.NOT_A_NUMBER, problemOf("1,000"))
+        assertEquals(AmountProblem.NOT_A_NUMBER, problemOf("1,234.50"))
+        assertEquals(AmountProblem.NOT_A_NUMBER, problemOf("1.234,50"))
+        assertEquals(AmountProblem.NOT_A_NUMBER, problemOf("1,2,3"))
+    }
+    @Test fun amount_negativeHasItsOwnReason() {
+        assertEquals(AmountProblem.NEGATIVE, problemOf("-5"))
+        assertEquals(AmountProblem.NEGATIVE, problemOf("-20.50"))
+        assertEquals(AmountProblem.NOT_A_NUMBER, problemOf("-abc"))
+    }
+    @Test fun amount_tooLargeHasItsOwnReason() {
+        assertEquals(AmountProblem.TOO_LARGE, problemOf("10000000"))
+        assertEquals(AmountProblem.TOO_LARGE, problemOf("10000000.00"))
+        assertEquals(AmountProblem.TOO_LARGE, problemOf("99999999999999999999"))
+    }
+    @Test fun amount_limitBoundary_isAccepted() = assertEquals(999999999L, centsOf("9999999.99"))
+    @Test fun amount_leadingZerosDoNotCountTowardTheLimit() {
+        assertEquals(100L, centsOf("00000001"))
+        assertEquals(0L, centsOf("0000000000000"))
+    }
+    @Test fun amount_nonAsciiAndDecoration_isNotANumber() {
+        for (bad in listOf("+5", "$5", "١٢", "１２", "5​", "5 0")) {
+            assertEquals("input [$bad]", AmountProblem.NOT_A_NUMBER, problemOf(bad))
+        }
+        assertEquals(500L, centsOf(" 5 "))
+    }
+    @Test fun parseCents_agreesWithParseAmount() {
+        assertEquals(10050L, parseCents("100,50"))
+        assertNull(parseCents("-5"))
+        assertNull(parseCents("10000000"))
+    }
+
+    // ---- Review fixes: words and formatting -------------------------------------------------
+
+    @Test fun amountMessages_sayWhatIsWrong() {
+        assertEquals("Card tips isn't a valid amount. Use numbers like 123.45.", amountMessage("Card tips", AmountProblem.NOT_A_NUMBER))
+        assertEquals("Cash tips can't be negative.", amountMessage("Cash tips", AmountProblem.NEGATIVE))
+        assertEquals("Card tips is too large (the most is $9,999,999.99).", amountMessage("Card tips", AmountProblem.TOO_LARGE))
+    }
+    @Test fun rejectionMessages_areTheOnesTheScreenShows() {
+        assertEquals("Tips can't be negative.", rejectionMessage(Rejection.NEGATIVE_AMOUNT))
+        assertEquals("Total tip pool is under $1.", rejectionMessage(Rejection.LESS_THAN_ONE_DOLLAR))
+        assertEquals("Add at least one employee.", rejectionMessage(Rejection.NO_EMPLOYEES))
+    }
+    @Test fun formatCents_isIntegerOnly() {
+        assertEquals("$0.40", formatCents(40))
+        assertEquals("$0.05", formatCents(5))
+        assertEquals("$1.00", formatCents(100))
+        assertEquals("$212.40", formatCents(21240))
+    }
+
+    // ---- Review fixes: stronger guards on the split ------------------------------------------
+
+    @Test fun centsFromBothFields_carryIntoADollar() {
+        // 0.60 + 0.60 on top of 100.00 + 111.60: cents add up before splitting.
+        val r = split(10060, 11160, counts(c100 = 7))
+        assertEquals(212, r.poolDollars)
+        assertEquals(20, r.leftoverCents)
+    }
+    @Test fun bothFieldsAtTheMaximum_stillSplitWithoutOverflow() {
+        val r = split(999999999, 999999999, counts(c100 = 7))
+        assertEquals(19999999, r.poolDollars)
+        assertEquals(98, r.leftoverCents)
+        assertEquals(r.poolDollars, r.totalPaidOut + r.extraDollars)
+    }
+    @Test fun everyPayout_isTheExactFloorOfItsFairShare() {
+        val pools = listOf(100L, 21240L, 99999L, 123456L, 250000L)
+        val shapes = listOf(counts(1), counts(7), counts(3, 2, 1, 1), counts(0, 0, 0, 5), counts(8, 8, 8, 8))
+        for (p in pools) for (c in shapes) {
+            val r = split(p, 0, c)
+            for (t in r.tiers) {
+                val exact = r.poolDollars.toLong() * t.pct
+                assertTrue("pool $p $c pct ${t.pct}: payout too big", t.payout.toLong() * r.totalSharesPct <= exact)
+                assertTrue("pool $p $c pct ${t.pct}: payout too small", (t.payout + 1L) * r.totalSharesPct > exact)
+            }
+        }
+    }
+    @Test fun payoutsMatchTheOldAppsKnownOutputs() {
+        // Produced by the pre-change Double algorithm (docs/evidence/compare-old-vs-new.py).
+        val pinned = listOf(
+            Triple(212L, counts(7), listOf(30)),
+            Triple(500L, counts(2, 2, 1, 1), listOf(117, 88, 58, 29)),
+            Triple(1L, counts(1), listOf(1)),
+            Triple(137L, counts(3, 1, 2), listOf(28, 21, 14)),
+            Triple(999L, counts(5, 3, 2, 4), listOf(108, 81, 54, 27)),
+            Triple(1500L, counts(8, 8, 8, 8), listOf(75, 56, 37, 18)),
+            Triple(86L, counts(c25 = 4), listOf(21)),
+            Triple(1234L, counts(1, 1, 1, 1), listOf(493, 370, 246, 123)),
+        )
+        for ((pool, c, expected) in pinned) {
+            assertEquals("pool $pool $c", expected, split(pool * 100, 0, c).tiers.map { it.payout })
+        }
+    }
 }

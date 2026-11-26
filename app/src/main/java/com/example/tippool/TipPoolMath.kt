@@ -67,3 +67,24 @@ fun calculatePool(cardCents: Long, cashCents: Long, counts: Map<Int, Int>): Pool
         totalSharesPct = totalSharesPct.toInt(),
     )
 }
+
+// ---- Review fixes (stubs: written test-first, see docs/review/triage-2026-11-26.md) ------------------
+
+enum class AmountProblem { NOT_A_NUMBER, NEGATIVE, TOO_LARGE }
+
+sealed interface Amount {
+    data class Cents(val value: Long) : Amount
+    data class Problem(val kind: AmountProblem) : Amount
+}
+
+/** Like [parseCents] but says WHY an amount was refused. */
+fun parseAmount(text: String): Amount = Amount.Problem(AmountProblem.NOT_A_NUMBER)
+
+/** Plain words for a refused amount typed into [field] (e.g. "Card tips"). */
+fun amountMessage(field: String, problem: AmountProblem): String = ""
+
+/** Plain words for a pool that could not be split. */
+fun rejectionMessage(reason: Rejection): String = ""
+
+/** Integer-only money text such as "$212.40", independent of the phone's language settings. */
+fun formatCents(cents: Long): String = ""

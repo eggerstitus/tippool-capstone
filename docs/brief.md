@@ -26,15 +26,15 @@ nothing carries into another pool: the physical cents go in a jar and are counte
 next pool's cash. The line is hidden when there are no cents.
 
 ## Definition of done (checklist)
-- [ ] $212.40 split with 7 / 0 / 0 / 0 employees gives a result, not an error; $0.40 is shown as
+- [x] $212.40 split with 7 / 0 / 0 / 0 employees gives a result, not an error; $0.40 is shown as
       "Leave for next pool".
-- [ ] A whole-dollar pool **hides** the "Leave for next pool" line (owner decision: the cents go in
+- [x] A whole-dollar pool **hides** the "Leave for next pool" line (owner decision: the cents go in
       a jar counted again in the next pool, so the line only matters when there are cents).
-- [ ] Negative, NaN, Infinity and overflowing amounts are rejected with a plain message.
-- [ ] Existing whole-dollar results are unchanged (regression tests pin today's numbers).
-- [ ] The tip-pool math is a pure function with its own test class, written test-first.
-- [ ] `./gradlew testDebugUnitTest --tests "com.tippool.TipPoolMathTest"` is green; README says how.
-- [ ] Adversarial review of the math change is saved and every finding is triaged.
+- [x] Negative, NaN, Infinity and overflowing amounts are rejected with a plain message.
+- [x] Existing whole-dollar results are unchanged (regression tests pin today's numbers).
+- [x] The tip-pool math is a pure function with its own test class, written test-first.
+- [x] `./gradlew testDebugUnitTest --tests "com.tippool.TipPoolMathTest"` is green; README says how.
+- [x] Adversarial review of the math change is saved and every finding is triaged.
 - [ ] Retro, SUBMISSION.md, and one reusable skill are committed.
 
 ## Explicit non-goals
@@ -45,3 +45,8 @@ next pool's cash. The line is hidden when there are no cents.
 - Fairness policy for the whole-dollar remainder ("Extra dollars" after flooring each tier) - the
   existing behavior stays; only documenting it.
 - Play Store release, signing, or publishing a build.
+
+## Status of the checklist (2026-11-26)
+Ticked items are covered by `TipPoolMathTest` (42 green) and the review files; see `SUBMISSION.md`.
+The "hides the line at $0" item is implemented in `TipPoolScreen.kt` but **not seen on a device**.
+The last item is open until the owner writes the retro (`docs/retro.md` is a skeleton).

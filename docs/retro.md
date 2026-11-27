@@ -1,55 +1,69 @@
-# Retro
+# Retro: TipPool cents handling
 
-> **SKELETON, NOT THE RETRO.** The AI wrote the facts under each heading ("Facts, from the record").
-> The text after "Your answer" must be written by the owner, in their own words, with specifics only
-> they know. Delete these notes and the fact bullets you don't use. Target: 1-2 pages.
+**Project:** the tip-pool calculator in my older TipPool app now accepts cents. Whole dollars are split
+across tiers as before, and the leftover cents are shown as "Leave for next pool" (hidden when there are none).
+Evidence map: [`SUBMISSION.md`](../SUBMISSION.md).
 
 ## What did the AI do well?
-Facts, from the record:
-- Found the legacy app and wrote an audit before touching code; set up the fresh repo and masked personal data.
-- Test-first order is visible in the log (red `18bcd52` -> green `a634455`; red `6a00731` -> green `4fee76f`).
-- Checked its own suspicion (Double vs integer math) with a 9.84M-case comparison and reported that it was wrong.
+- **It re-explained my own old app to me.** I wrote TipPool a while ago. The AI read the code, reminded me how
+  the tip math works, and pointed out where it could be better (cents rejected, negatives accepted, no tests at all).
+- **It worked test-first and showed it.** Tests were committed failing before the code (`18bcd52` then `a634455`;
+  `6a00731` then `4fee76f`), with the red and green runs saved in `docs/evidence/`.
+- **It checked its own suspicion and reported that it was wrong.** It worried that the old floating-point math and
+  the new integer math would disagree, tested 9.84 million cases, and found no difference.
+- **It found the 4 failing catering tests** that were already red before we started, and kept them out of my way
+  as a documented non-goal instead of hiding or "fixing" them.
+- **It set up the fresh public repo and masked personal data** (a phone number and two restaurant emails).
 
-Your answer: _
+## What did it do badly, and how did I catch it?
+Details in [`docs/failures.md`](failures.md).
+- **It started in the wrong place.** It first wanted to work inside the repo of another project I'm working on,
+  because it didn't understand that this project was branched off that one. I told it to leave that project alone
+  and we made a fresh repo.
+- **It said the git history was clean when it wasn't.** The first commit still held my phone number. It was caught
+  by re-scanning every commit before the first push, so nothing was ever published.
+- **A long command silently did nothing.** `git status` showed no files had changed, so the step was redone with
+  shorter commands.
+- **Its first draft of the brief was written from the code alone.** It assumed things about who counts the tips and
+  when. The real facts (cents on about 99% of shifts, shift leads count in the morning, the cents go in a jar) came
+  from me.
+- **Plan v2 was the AI's own critique of plan v1, not me rejecting a plan.** I approved plan v1 as written.
+- **I never ran the finished screen on a device.** Everything was compiled and unit-tested only.
 
-## What did it do badly, and how did you catch it?
-Facts, from the record (`docs/failures.md`):
-- Reported the history as clean while the baseline commit still held a phone number; caught by re-scanning all commits before the first push.
-- A long shell command silently did nothing; caught by `git status`.
-- Wrote the first draft of the brief's "need" and "user" from the code alone, before the owner supplied the real numbers (cents on ~99% of shifts).
-- Never ran the screen on a device.
-- Plan v2 was the AI's own critique of plan v1, not an owner rejection.
+## Where did my judgment enter?
+**Stack-call.** I chose my older legacy TipPool over my newer, more complete CaterChecked app. The older one let me
+experiment with a feature more freely. Another alternative was to keep rejecting cents, which the old app always did;
+I decided to allow them, and the AI helped me do it without changing any existing whole-dollar results.
 
-Your answer (what did *you* catch, and what did you miss?): _
+**Caveat-catch.** The brief the AI drafted assumed a different workflow than mine: counting at the end of a shift,
+and cents as something to deal with in the app. I corrected it. The count happens in the morning, and the
+leftover cents are physically put in a jar that gets counted again with the next pool. That is why the cents are
+display-only: the app stores nothing and carries nothing forward. (The "leave for next pool" wording is mine, and
+it could be read as "the app carries these forward", so I clarified what I meant.)
 
-## Where did your judgment enter?
-Facts only; the judgment is yours.
+**Taste-pick.** When there were leftover cents, the agent suggested a wording for the note that didn't make sense to me
+as an instruction, so I had it reworded to something a shift lead would understand. I also decided to hide the line
+completely when there are no cents, because with a jar it only matters when there are cents.
 
-**Stack-call** (a decision you owned against a plausible alternative):
-- Candidates: chose the legacy tip pool app over CaterChecked as the project; chose whole-dollar split with leftover cents (option "B") over rejecting cents or tracking cents per person; chose display-only cents (nothing stored) over carrying them to the next pool; made the repo public.
-- Your answer: _
+**Next-run.** TODO(owner): one or two sentences, in your own words, on what you designed for the next run rather
+than this one (candidates: the skill, the CLAUDE.md rules, the CI workflow; what made you build those?).
 
-**Caveat-catch** (an assumption or AI claim that turned out wrong or incomplete):
-- Candidates: the 4 baseline-red catering tests nobody had told you about; the AI's "history is clean" claim; the AI's plan assumed "cents" rather than your real fact that cents are on ~99% of shifts and go in a jar; the reviewer's "comma keyboard" finding.
-- Your answer: _
+## What did I encode for next time?
+- A reusable skill, [`.claude/skills/pure-logic-test-first/SKILL.md`](../.claude/skills/pure-logic-test-first/SKILL.md),
+  with a prompt starter for pulling logic out of UI code and changing it test-first.
+- Two rules added to [`CLAUDE.md`](../CLAUDE.md) after my own failures: keep shell commands short and verify each step,
+  and scan every commit for personal data before making a repo public.
+- A GitHub Actions workflow that runs the tip-pool tests on every push (it passed first time).
+- A README with run and test steps, and a triage file format for reviewing an AI review.
 
-**Taste-pick** (a call that was yours because it was judgment, not correctness):
-- Candidates: hide "Leave for next pool" at $0.00 (your reason: the jar is counted again); label wording; which review findings to accept without a change (#4, #5, #6 in the triage - these were the AI's first-pass calls, did you agree?).
-- Your answer: _
-
-**Next-run** (what you designed for the NEXT run, not the perfect run):
-- Candidates: the `pure-logic-test-first` skill; the CLAUDE.md rules from the failure record; the CI workflow.
-- Your answer: _
-
-## What did you encode for next time?
-Facts: skill file, CLAUDE.md rules, CI workflow, README run/test instructions, triage template in `docs/review/`.
-
-Your answer: _
-
-## What would you delegate differently on the next project?
-Your answer: _
+## What would I delegate differently on the next project?
+I would not hand over features where the answer is mostly a matter of design taste, such as wording and layout.
+The agents' design ideas don't always look good, so I would decide those myself and delegate the verifiable parts:
+the math, the tests, the repo setup and the review.
 
 ## Honest gaps
-- The screen was not run on a device before submission (or: you ran it and found ...). _
-- The ViewModel and screen have no automated tests.
+- I did not run the finished screen on a device before submitting.
+- The ViewModel and the screen code have no automated tests; the math lives in a separate file that does.
 - The 4 pre-existing failing catering tests are untouched.
+- Three of the review's findings (#4, #5, #6) I accepted without a code change; the reason is in
+  [`docs/review/triage-2026-11-26.md`](review/triage-2026-11-26.md).

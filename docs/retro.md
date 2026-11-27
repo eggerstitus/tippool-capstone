@@ -45,8 +45,11 @@ it could be read as "the app carries these forward", so I clarified what I meant
 as an instruction, so I had it reworded to something a shift lead would understand. I also decided to hide the line
 completely when there are no cents, because with a jar it only matters when there are cents.
 
-**Next-run.** TODO(owner): one or two sentences, in your own words, on what you designed for the next run rather
-than this one (candidates: the skill, the CLAUDE.md rules, the CI workflow; what made you build those?).
+**Next-run.** I didn't just fix the problems that came up, I made sure they won't come up again on my next project.
+The skill is a step-by-step process for pulling logic out of app code and changing it test-first, so I don't have to
+figure that out again. I added rules to CLAUDE.md from the mistakes we made (keep commands short, and check every
+commit for personal info before making a repo public), so the AI follows them from the start next time. I also set up
+the CI workflow so the tests run on their own every time I push, instead of me remembering to run them.
 
 ## What did I encode for next time?
 - A reusable skill, [`.claude/skills/pure-logic-test-first/SKILL.md`](../.claude/skills/pure-logic-test-first/SKILL.md),

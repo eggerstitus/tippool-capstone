@@ -13,7 +13,7 @@ Track A. Project: TipPool cents handling (an existing Kotlin Android app; the ti
 - Context file: [`CLAUDE.md`](CLAUDE.md) (written before feature work; two rules added later from the failure record)
 - Plans, including a revised one: [`docs/plans/plan-v1.md`](docs/plans/plan-v1.md) -> [`docs/plans/plan-v2.md`](docs/plans/plan-v2.md)
   (note: the revision came from the AI's own critique, confirmed by the owner's cents decision, not from an owner rejection)
-- Commit history: `git log --oneline` (about 25 small commits, docs and tests and code separate)
+- Commit history: `git log --oneline` (23 small commits at the time of writing, docs and tests and code separate)
 
 ## Verification and testing
 

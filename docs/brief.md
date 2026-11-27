@@ -35,7 +35,7 @@ next pool's cash. The line is hidden when there are no cents.
 - [x] The tip-pool math is a pure function with its own test class, written test-first.
 - [x] `./gradlew testDebugUnitTest --tests "com.tippool.TipPoolMathTest"` is green; README says how.
 - [x] Adversarial review of the math change is saved and every finding is triaged.
-- [ ] Retro, SUBMISSION.md, and one reusable skill are committed.
+- [x] Retro, SUBMISSION.md, and one reusable skill are committed.
 
 ## Explicit non-goals
 - Carrying cents into the next pool, or storing anything between shifts.
@@ -49,4 +49,4 @@ next pool's cash. The line is hidden when there are no cents.
 ## Status of the checklist (2026-11-26)
 Ticked items are covered by `TipPoolMathTest` (42 green) and the review files; see `SUBMISSION.md`.
 The "hides the line at $0" item is implemented in `TipPoolScreen.kt` but **not seen on a device**.
-The last item is open until the owner writes the retro (`docs/retro.md` is a skeleton).
+The retro is written (`docs/retro.md`); the screen has still not been seen on a device.

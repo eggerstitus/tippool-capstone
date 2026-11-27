@@ -41,9 +41,8 @@ leftover cents are physically put in a jar that gets counted again with the next
 display-only: the app stores nothing and carries nothing forward. (The "leave for next pool" wording is mine, and
 it could be read as "the app carries these forward", so I clarified what I meant.)
 
-**Taste-pick.** When there were leftover cents, the agent suggested a wording for the note that didn't make sense to me
-as an instruction, so I had it reworded to something a shift lead would understand. I also decided to hide the line
-completely when there are no cents, because with a jar it only matters when there are cents.
+**Taste-pick.** I decided to hide the "Leave for next pool" line completely when there are no cents, because with a jar
+it only matters when there are cents to put in it.
 
 **Next-run.** I didn't just fix the problems that came up, I made sure they won't come up again on my next project.
 The skill is a step-by-step process for pulling logic out of app code and changing it test-first, so I don't have to
